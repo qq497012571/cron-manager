@@ -7,6 +7,20 @@ use SuperCronManager\Task;
 
 class CronManager 
 {
+    /**
+     * 消息队列消息类型: 用于发送与接收定时任务函数
+     */
+    const MSG_TASKID_TYPE = 1;
+
+    /**
+     * 消息队列消息类型: 用于发送与接收worker的运行状态
+     */
+    const MSG_WORKER_TYPE = 2;
+
+    /**
+     * 消息队列消息类型: 用于发送与接收定时任务信号
+     */
+    const MSG_SIG_TYPE = 3;
 
     /**
      * cronjob pool
@@ -335,13 +349,13 @@ class CronManager
             //通知worker停止
             case $this->signalSupport['stop']:
                 for ($i=0; $i < count(static::$_workers); $i++) { 
-                    $this->master->write($this->signalSupport['stop'], Proccess::MSG_SIG_TYPE);
+                    $this->master->write($this->signalSupport['stop'], CronManager::MSG_SIG_TYPE);
                 }
                 break;
             //通知worker进程重启
             case $this->signalSupport['restart']:
                 for ($i=0; $i < count(static::$_workers); $i++) { 
-                    $this->master->write($this->signalSupport['restart'], Proccess::MSG_SIG_TYPE);
+                    $this->master->write($this->signalSupport['restart'], CronManager::MSG_SIG_TYPE);
                 }
                 break;
             // 通知台ctrl+c退出
@@ -371,7 +385,7 @@ class CronManager
                     // 向worker进程写任务ID
                     $this->master->write(
                         $id,
-                        Proccess::MSG_TASKID_TYPE
+                        CronManager::MSG_TASKID_TYPE
                     );
 
                 }
@@ -416,7 +430,7 @@ class CronManager
      */
     public function readWorkerStatus()
     {
-        while (($msg = $this->master->read(Proccess::MSG_WORKER_TYPE, false)) != '') {
+        while (($msg = $this->master->read(CronManager::MSG_WORKER_TYPE, false)) != '') {
             $workerStatus = json_decode($msg,true);
             static::$_workers[$workerStatus['pid']] = array_merge(static::$_workers[$workerStatus['pid']], $workerStatus);
         }
@@ -431,7 +445,6 @@ class CronManager
     
     /**
      * 清理残留文件
-     * @return [type] [description]
      */
     public function clear()
     {

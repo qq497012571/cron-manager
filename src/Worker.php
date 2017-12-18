@@ -64,7 +64,7 @@ class Worker extends Proccess
 	 */
 	public function readSignal()
 	{
-		while (($sig = $this->read(Proccess::MSG_SIG_TYPE, false)) != '') {
+		while (($sig = $this->read(CronManager::MSG_SIG_TYPE, false)) != '') {
 			if (isset($this->signalSupport[$sig])) {
 				call_user_func([$this, $this->signalSupport[$sig]], $sig);
 			}
@@ -103,7 +103,7 @@ class Worker extends Proccess
 
 			try {
 				// 接收要运行的任务ID
-				$taskId = $this->read(Proccess::MSG_TASKID_TYPE, false);
+				$taskId = $this->read(CronManager::MSG_TASKID_TYPE, false);
 				if ($taskId !== false && isset(static::$_cacheTasks[$taskId])) {
 					// 运行任务
 					$task = static::$_cacheTasks[$taskId];
@@ -118,7 +118,7 @@ class Worker extends Proccess
 						'startTime' => $this->startTime,
 					];
 					// 记录worker运行状态
-					$this->write(json_encode($workerStatus), Proccess::MSG_WORKER_TYPE);
+					$this->write(json_encode($workerStatus), CronManager::MSG_WORKER_TYPE);
 				}
 			} catch (Exception $e) {
 				CronManager::log('error', $e->getMessage());
