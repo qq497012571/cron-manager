@@ -32,7 +32,13 @@ class Task
 	private $intvalTag = '';
 
 	/**
-	 * 任务状态 0开启 1关闭 2异常
+	 * 任务间隔组
+	 * @var array
+	 */
+	private $intvalTagList = null;
+
+	/**
+	 * 任务状态 0开启 1关闭 2任务过期
 	 * @var integer
 	 */
 	private $status = 0;
@@ -45,9 +51,15 @@ class Task
 
 	/**
 	 * 任务回调
-	 * @var Closure
+	 * @var callable
 	 */
-	private $closure = null;
+	private $callable = null;
+
+	/**
+	 * 回调参数
+	 * @var null
+	 */
+	private $param = null;
 
 	/**
 	 * 任务下次运行时间
@@ -62,21 +74,31 @@ class Task
 	private $lastTime = 0;
 
 
-	public function __construct($name, $intvalTag, \Closure $closure)
+	public function __construct($name, $intvalTag, callable $callable, $param = null)
 	{
 		$this->name = $name;
 		$this->intvalTag = $intvalTag;
-		$this->closure = $closure;
+		$this->callable = $callable;
+		$this->param = $param;
 		$this->id = static::$_id++;
+
+		if (is_array($intvalTag)) {
+			$this->intvalTagList = $intvalTag;
+			sort($this->intvalTagList);
+		} else {
+			$this->intvalTag = $intvalTag;
+		}
+
 	}
 
 	/**
 	 * 运行任务
+	 * @param array $param 任务运行参数
 	 */
 	public function exec()
 	{
 		try {
-			return call_user_func($this->closure);
+			return call_user_func($this->callable, $this->param);
 		} catch (Exception $e) {
 			// 设为异常状态
 			$this->status = 1;
@@ -90,13 +112,17 @@ class Task
 	 */
 	public function valid()
 	{
+		if ($this->status !== 0) {
+			return false;
+		}
+
 		// 初始化
 		if ($this->nextTime === 0) {
 			$this->calcNextTime();
 			$this->count = 0;
 		}
 
-		if ($this->status == 0 && time() >= $this->nextTime) {
+		if (time() >= $this->nextTime) {
 			return true;
 		}
 		return false;
@@ -108,12 +134,31 @@ class Task
      */
     public function calcNextTime()
     {
+		$this->lastTime = $this->nextTime;
+
+
+		if (is_array($this->intvalTagList) && empty($this->intvalTagList)) {
+    		$this->count++;
+			$this->nextTime = 0;
+    		$this->status = 1;
+    		return;
+    	}
+
+    	if (is_array($this->intvalTagList) && !empty($this->intvalTagList)) {
+    		$this->intvalTag = array_shift($this->intvalTagList);
+    		// 过期的任务
+    		if (strtotime($this->intvalTag) < time()) {
+    			$this->status = 2;
+    			return;
+    		}
+    		$this->nextTime = strtotime($this->intvalTag);
+    		$this->count++;
+    		return;
+    	}
+
 
     	list($tag, $timer) = explode('@', $this->intvalTag);
-    	
-    	$this->lastTime = $this->nextTime;
-    	$this->count++;
-
+		$this->lastTime = $this->nextTime;
         // 指定每天运行日期  格式 00:00
         if ($tag == 'at' && strlen($timer) == 5) {
             if (time() >= strtotime($timer)) {
@@ -140,6 +185,7 @@ class Task
             $this->nextTime = time() + $timer * 60 * 60;
         }
 
+    	$this->count++;
     }
 
     /**

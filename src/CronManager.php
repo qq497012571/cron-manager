@@ -125,18 +125,17 @@ class CronManager
 
         $this->checkFile();
 
-        $this->daemonize();
-
         $this->welcome();
 
-        $this->startWorkers();
+        $this->daemonize();
 
         $this->registerSignal();
+
+        $this->startWorkers();
 
         $this->loop();
 
     }
-
 
     /**
      * 解析命令行
@@ -235,6 +234,7 @@ class CronManager
         } 
         
         umask(0);
+
         $pid = pcntl_fork();
         if (-1 === $pid) {
             die('fork fail');
@@ -266,20 +266,19 @@ class CronManager
     {
         global $stdin, $stdout, $stderr;
 
-        //关闭打开的文件描述符
-        @fclose(STDIN);
-        @fclose(STDOUT);
-        @fclose(STDERR);
+        //关闭打开的文件描述符    
+        fclose(STDIN);
+        fclose(STDOUT);
+        fclose(STDERR);
+
+        if ($this->output != '/dev/null' && !file_exists($this->output)) {
+            touch($this->output);
+            chmod($this->output, 0755);
+        }
 
         $stdin  = fopen($this->output, 'r');
         $stdout = fopen($this->output, 'a');
         $stderr = fopen($this->output, 'a');
-
-        if ($this->output != '/dev/null' && !file_exists($this->output)) {
-            @touch($this->output);
-            @chmod($this->output, 0755);
-        }
-
     }
 
     /**
@@ -382,7 +381,7 @@ class CronManager
                 if ($task->valid()) {
                     
                     $task->calcNextTime();
-                    // 向worker进程写任务ID
+                    // 向消息队列写任务ID,通知worker运行
                     $this->master->write(
                         $id,
                         CronManager::MSG_TASKID_TYPE
@@ -457,13 +456,21 @@ class CronManager
     /**
      * 添加定时任务
      * @param  string  $name      
-     * @param  string  $intvalTag 
-     * @param  Closure $closure   
+     * @param  string/array  $intvalTag 
+     * @param  callable $callable 
+     * @param  array $ticks 进程分片  
      */
-    public function taskInterval($name, $intvalTag, \Closure $closure)
+    public function taskInterval($name, $intvalTag, callable $callable, array $ticks = [])
     {   
-        $t = new Task($name, $intvalTag, $closure);
-        static::$_tasks[$t->getId()] =& $t;
+        if (!empty($ticks)) {
+            foreach ($ticks as $tick) {
+                $t = new Task($name, $intvalTag, $callable, $tick);
+                static::$_tasks[$t->getId()] = $t;
+            }
+        } else {
+            $t = new Task($name, $intvalTag, $callable);
+            static::$_tasks[$t->getId()] = $t;
+        }
     }
 
     /**

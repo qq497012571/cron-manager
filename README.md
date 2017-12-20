@@ -14,6 +14,7 @@ cronManager是一个纯PHP实现的定时任务管理工具,api简单清晰,采�
 
 * 提供各种命令监控任务运行状态
 
+* 支持任务分片,也就是多个进程分割运行一个任务
 
 ## 环境要求
 
@@ -27,17 +28,24 @@ cronManager是一个纯PHP实现的定时任务管理工具,api简单清晰,采�
 
 ## 使用介绍
 
-核心方法 `CronManager::taskInterval($name, $command, $callable)` 
+核心方法 `CronManager::taskInterval($name, $command, $callable, $ticks = [])` 
 
 参数1 $name 定时任务名称
 
-参数2 $command 运行指令以key@value的形式表示
+参数2 $command 
+
+传入string则表示用key@value的形式表示
 1. `s@n` 表示每n秒运行一次 
 2. `i@n` 表示每n分钟运行一次 
 3. `h@n` 表示每n小时运行一次
 4. `at@nn:nn` 表示指定每天的nn:nn执行 例如每天凌晨 at@00:00
 
+传入array则表示依次运行数组里的每一个指定日期,要求每一个元素都可以被`strtotime`函数解析,否则运行不了
+如: `['2017-09-09 08:00','2017-09-09 08:00']`
+
 参数3 $callable 回调函数,也就是定时任务业务逻辑
+
+参数4 $ticks 用于任务分片
 
 ## 快速入门示例
 
@@ -56,8 +64,7 @@ $manager->workerNum = 5;
 // 设置输出重定向,守护进程模式才生效
 $manager->output = './test.log';
 
-
-$manager->taskInterval('每秒钟运行一次', 's@1', function(){
+manager->taskInterval('每秒钟运行一次', 's@1', function(){
 	echo "Hello crontabManager\n";
 });
 $manager->taskInterval('每分钟运行一次', 'i@1', function(){
@@ -66,8 +73,15 @@ $manager->taskInterval('每分钟运行一次', 'i@1', function(){
 $manager->taskInterval('每小时运行一次', 'h@1', function(){
 	echo "Hello crontabManager\n";
 });
-$manager->taskInterval('指定每天00:00运行一次', 'at@00:00', function(){
+$manager->taskInterval('每天凌晨运行一次', 'at@00:00', function(){
 	echo "Hello crontabManager\n";
+});
+$manager->taskInterval('任务分片', 's@1', function($str){
+	echo "$str\n";
+},[1,2]);
+
+$manager->taskInterval('指定日期运行', ['2017-12-20 23:06','2017-12-20 23:07'], function($index){
+	echo "ticks $index\n";
 });
 
 $manager->run();

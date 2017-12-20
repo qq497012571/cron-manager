@@ -38,7 +38,7 @@ class ConsoleManager
 		$status = [
 			'0' => '正常',
 			'1' => '关闭',
-			'2' => '报错',
+			'2' => '过期关闭',
 		];
 		foreach ($tasks as $id => $task) {
 			$attr = $task->getAttributes();

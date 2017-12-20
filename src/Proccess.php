@@ -58,7 +58,7 @@ class Proccess
 		$this->title = isset($setting['title']) ? $setting['title'] : '';
 		$this->queue = msg_get_queue(ftok(self::MSG_KEY, 'a'));
 
-		if (!empty($this->title)) {
+		if (!empty($this->title) && function_exists('cli_set_process_title')) {
 			@cli_set_process_title($this->title);
 		}
 	}
