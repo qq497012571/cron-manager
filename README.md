@@ -64,7 +64,7 @@ $manager->workerNum = 5;
 // 设置输出重定向,守护进程模式才生效
 $manager->output = './test.log';
 
-manager->taskInterval('每秒钟运行一次', 's@1', function(){
+$manager->taskInterval('每秒钟运行一次', 's@1', function(){
 	echo "Hello crontabManager\n";
 });
 $manager->taskInterval('每分钟运行一次', 'i@1', function(){
@@ -80,7 +80,7 @@ $manager->taskInterval('任务分片', 's@1', function($str){
 	echo "$str\n";
 },[1,2]);
 
-$manager->taskInterval('指定日期运行', ['2017-12-20 23:06','2017-12-20 23:07'], function($index){
+$manager->taskInterval('分片测试', ['2017-12-20 23:28','2017-12-20 23:30'], function($index){
 	echo "ticks $index\n";
 });
 

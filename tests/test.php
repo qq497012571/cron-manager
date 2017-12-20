@@ -26,7 +26,7 @@ $manager->taskInterval('任务分片', 's@1', function($str){
 	echo "$str\n";
 },[1,2]);
 
-$manager->taskInterval('分片测试', ['2017-12-20 23:06','2017-12-20 23:07'], function($index){
+$manager->taskInterval('分片测试', ['2017-12-20 23:28','2017-12-20 23:30'], function($index){
 	echo "ticks $index\n";
 });
 
