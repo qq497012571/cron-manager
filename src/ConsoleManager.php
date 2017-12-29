@@ -58,7 +58,7 @@ class ConsoleManager
 	/**
 	 * master状态
 	 * @param  object $cronManager
-	 * @return 
+	 * @return void
 	 */
 	public static function cronManageStatusTable(CronManager $cronManager)
 	{

@@ -1,5 +1,4 @@
 <?php
-
 namespace SuperCronManager;
 
 /**
@@ -11,69 +10,75 @@ class Task
 	 * 用于ID自增
 	 * @var integer
 	 */
-	static private $_id = 0;
+	private static $_id = 0;
 
 	/**
 	 * 任务ID 唯一 
 	 * @var string
 	 */
-	private $id = '';
+	public $id = '';
 
 	/**
 	 * 任务名称,别名 alias
 	 * @var string
 	 */
-	private $name = '';
+	public $name = '';
 
 	/**
 	 * 任务间隔标识 s@1 m@1 h@1 at@00:00
 	 * @var string
 	 */
-	private $intvalTag = '';
+	public $intvalTag = '';
 
 	/**
 	 * 任务间隔组
 	 * @var array
 	 */
-	private $intvalTagList = null;
+	public $intvalTagList = null;
 
 	/**
 	 * 任务状态 0开启 1关闭 2任务过期
 	 * @var integer
 	 */
-	private $status = 0;
+	public $status = 0;
 
 	/**
 	 * 运行次数
 	 * @var integer
 	 */
-	private $count = 0;
+	public $count = 0;
 
 	/**
 	 * 任务回调
 	 * @var callable
 	 */
-	private $callable = null;
+	public $callable = null;
 
 	/**
 	 * 回调参数
 	 * @var null
 	 */
-	private $param = null;
+	public $param = null;
 
 	/**
 	 * 任务下次运行时间
 	 * @var integer
 	 */
-	private $nextTime = 0;
+	public $nextTime = 0;
 
 	/**
 	 * 任务上次运行时间
 	 * @var integer
 	 */
-	private $lastTime = 0;
+	public $lastTime = 0;
 
-
+	/**
+	 * 构造函数
+	 * @param string   $name 任务名称
+	 * @param string/array   $intvalTag 任务间隔标识 s@1 m@1 h@1 at@00:00
+	 * @param callable $callable  任务主要运行逻辑
+	 * @param mixed   $param     任务参数
+	 */
 	public function __construct($name, $intvalTag, callable $callable, $param = null)
 	{
 		$this->name = $name;
@@ -88,7 +93,6 @@ class Task
 		} else {
 			$this->intvalTag = $intvalTag;
 		}
-
 	}
 
 	/**

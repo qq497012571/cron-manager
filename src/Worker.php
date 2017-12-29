@@ -1,5 +1,4 @@
 <?php
-
 namespace SuperCronManager;
 
 use SuperCronManager\Proccess;
@@ -13,12 +12,11 @@ class Worker extends Proccess
 	 */
 	private static $_cacheTasks = [];
 
-
 	/**
 	 * 间隔
 	 * @var integer
 	 */
-	private $usleep = 400000;
+	private $_usleep = 400000;
 
 	/**
 	 * worker启动时间
@@ -42,7 +40,7 @@ class Worker extends Proccess
 	 * 信号
 	 * @var boolean
 	 */
-	private $signalSupport = [
+	private $_signalSupport = [
 		SIGUSR1 => 'stop',
 		SIGUSR2 => 'restart',
 	];
@@ -65,8 +63,8 @@ class Worker extends Proccess
 	public function readSignal()
 	{
 		while (($sig = $this->read(CronManager::MSG_SIG_TYPE, false)) != '') {
-			if (isset($this->signalSupport[$sig])) {
-				call_user_func([$this, $this->signalSupport[$sig]], $sig);
+			if (isset($this->_signalSupport[$sig])) {
+				call_user_func([$this, $this->_signalSupport[$sig]], $sig);
 			}
 		}
 	}
@@ -124,7 +122,7 @@ class Worker extends Proccess
 				CronManager::log('error', $e->getMessage());
 			}
 			
-			usleep($this->usleep);
+			usleep($this->_usleep);
 		}
 
 		$this->stop();

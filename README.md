@@ -14,7 +14,7 @@ cronManager是一个纯PHP实现的定时任务管理工具,api简单清晰,采�
 
 * 提供各种命令监控任务运行状态
 
-* 支持任务分片,也就是多个进程分割运行一个任务
+* 支持一个任务由多个进程同时,以不同的标识运行一个任务
 
 ## 环境要求
 
@@ -45,7 +45,7 @@ cronManager是一个纯PHP实现的定时任务管理工具,api简单清晰,采�
 
 参数3 $callable 回调函数,也就是定时任务业务逻辑
 
-参数4 $ticks 用于任务分片
+参数4 $ticks 用于单任务多进程时标识
 
 ## 快速入门示例
 
@@ -54,7 +54,6 @@ cronManager是一个纯PHP实现的定时任务管理工具,api简单清晰,采�
 //test.php
 
 require __DIR__ . '/../vendor/autoload.php';
-
 
 $manager = new SuperCronManager\CronManager();
 
