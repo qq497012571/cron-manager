@@ -67,7 +67,7 @@ class ConsoleManager
 		$table->addSeparator();
 		$table->addRow(array('output', $cronManager->output));
 		$table->addSeparator();
-		$table->addRow(array('task_num', count(CronManager::$_tasks)));
+		$table->addRow(array('task_num', count(CronManager::$tasks)));
 		$table->addSeparator();
 		$table->addRow(array('worker_num', $cronManager->workerNum));
 		$table->addSeparator();
@@ -102,7 +102,6 @@ class ConsoleManager
 		$table = new \Console_Table();
 		$table->setHeaders(static::$_checkHeader);
 		$exts = get_loaded_extensions();
-
 
 		if (version_compare(PHP_VERSION, '5.4', ">=")) {
 			$row = array('php>=5.4', '[OK]');
