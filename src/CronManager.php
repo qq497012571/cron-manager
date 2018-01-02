@@ -87,6 +87,18 @@ class CronManager
     public $output = '/dev/null';
 
     /**
+     * 别名,用于全局访问
+     * @var string
+     */
+    public $alias = '';
+
+    /**
+     * 用于存储alias的bash文件
+     * @var string
+     */
+    public $bashFile = '';
+
+    /**
      * 信号支持
      * @var array
      */
@@ -122,6 +134,8 @@ class CronManager
         $this->parseArgv();
 
         $this->checkFile();
+
+        $this->_initAlias();
 
         $this->welcome();
 
@@ -255,6 +269,7 @@ class CronManager
         }
 
         $this->_resetStd();
+
     }
     /**
      * 重定向输出
@@ -277,6 +292,20 @@ class CronManager
         $stdin  = fopen($this->output, 'r');
         $stdout = fopen($this->output, 'a');
         $stderr = fopen($this->output, 'a');
+    }
+
+    /**
+     * alias用于简化命令操作
+     * @return void
+     */
+    private function _initAlias()
+    {
+        if ($this->alias !== '') {
+            $this->bashFile = $_SERVER['HOME'] . '/' . ".bash_{$this->alias}";
+            $php = $_SERVER['_'];
+            $script = $_SERVER['PWD'] . '/' . str_replace($_SERVER['PWD'].'/', '', $_SERVER['PHP_SELF']);
+            file_put_contents($this->bashFile, "alias {$this->alias}='$php $script'");
+        }
     }
 
     /**
@@ -456,6 +485,7 @@ class CronManager
         @unlink($this->_pidFile);
         @unlink($this->_statusFile);
         @unlink($this->_workerStatusFile);
+        @unlink($this->bashFile);
     }
 
     /**

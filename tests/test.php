@@ -4,6 +4,9 @@ require __DIR__ . '/../vendor/autoload.php';
 
 $manager = new SuperCronManager\CronManager();
 
+// bash的alias脚本别名,要生效需要用 source .bash_xxxxx 生效!
+$manager->alias = 'cron-manager';
+
 // 设置worker数
 $manager->workerNum = 5;
 

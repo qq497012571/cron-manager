@@ -67,6 +67,14 @@ class ConsoleManager
 		$table->addSeparator();
 		$table->addRow(array('output', $cronManager->output));
 		$table->addSeparator();
+
+		if (file_exists($cronManager->bashFile)) {
+			$table->addRow(array('alias', $cronManager->alias));
+			$table->addSeparator();
+			$table->addRow(array('bashFile', $cronManager->bashFile));
+			$table->addSeparator();
+		}
+
 		$table->addRow(array('task_num', count(CronManager::$tasks)));
 		$table->addSeparator();
 		$table->addRow(array('worker_num', $cronManager->workerNum));
