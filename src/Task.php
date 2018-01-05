@@ -1,6 +1,7 @@
 <?php
 namespace SuperCronManager;
 
+use SuperCronManager\CronParser;
 /**
  * 定时任务类
  */
@@ -10,7 +11,7 @@ class Task
 	 * 用于ID自增
 	 * @var integer
 	 */
-	private static $_id = 0;
+	private static $_id = 1;
 
 	/**
 	 * 任务ID 唯一 
@@ -31,10 +32,10 @@ class Task
 	public $intvalTag = '';
 
 	/**
-	 * 任务间隔组
+	 * 任务列表
 	 * @var array
 	 */
-	public $intvalTagList = null;
+	public $intvalDateList = [];
 
 	/**
 	 * 任务状态 0开启 1关闭 2任务过期
@@ -75,9 +76,9 @@ class Task
 	/**
 	 * 构造函数
 	 * @param string   $name 任务名称
-	 * @param string/array   $intvalTag 任务间隔标识 s@1 m@1 h@1 at@00:00
-	 * @param callable $callable  任务主要运行逻辑
-	 * @param mixed   $param     任务参数
+	 * @param string   $intvalTag 任务间隔标识 s@1 m@1 h@1 at@00:00
+	 * @param callable $callable  回调函数
+	 * @param mixed    $param     回调参数
 	 */
 	public function __construct($name, $intvalTag, callable $callable, $param = null)
 	{
@@ -86,13 +87,6 @@ class Task
 		$this->callable = $callable;
 		$this->param = $param;
 		$this->id = static::$_id++;
-
-		if (is_array($intvalTag)) {
-			$this->intvalTagList = $intvalTag;
-			sort($this->intvalTagList);
-		} else {
-			$this->intvalTag = $intvalTag;
-		}
 	}
 
 	/**
@@ -138,28 +132,22 @@ class Task
      */
     public function calcNextTime()
     {
+
 		$this->lastTime = $this->nextTime;
 
+		if (CronParser::check($this->intvalTag) && empty($this->intvalListDate)) {
+			$this->intvalListDate = CronParser::formatToDate($this->intvalTag, 200);
+		}
 
-		if (is_array($this->intvalTagList) && empty($this->intvalTagList)) {
-    		$this->count++;
-			$this->nextTime = 0;
-    		$this->status = 1;
-    		return;
-    	}
+		if (!empty($this->intvalListDate)) {
+			$this->nextTime = strtotime(array_shift($this->intvalListDate));
+			$this->count++;
+			return;
+		}
 
-    	if (is_array($this->intvalTagList) && !empty($this->intvalTagList)) {
-    		$this->intvalTag = array_shift($this->intvalTagList);
-    		// 过期的任务
-    		if (strtotime($this->intvalTag) < time()) {
-    			$this->status = 2;
-    			return;
-    		}
-    		$this->nextTime = strtotime($this->intvalTag);
-    		$this->count++;
-    		return;
-    	}
-
+		if (strpos($this->intvalTag, '@') === false) {
+			throw new Exception("解析错误: [{$this->intvalTag}]", 1);
+		}
 
     	list($tag, $timer) = explode('@', $this->intvalTag);
 		$this->lastTime = $this->nextTime;
