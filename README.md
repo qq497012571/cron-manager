@@ -31,11 +31,17 @@ cronManager是一个纯PHP实现的定时任务管理工具,api简单清晰,采�
 * `php 5.4以上`
 * `composer`
 
-* 手动下载记得要先 `composer update`一下哦！
 
 ## 安装
 
+* `composer`安装
+
 > composer require godv/cron-manager
+
+* `zip包`安装
+
+> 需进入cron-manager目录 `composer update`一下！
+
 
 ## 使用介绍
 
