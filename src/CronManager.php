@@ -87,6 +87,12 @@ class CronManager
     public $output = '/dev/null';
 
     /**
+     * 命令参数. 默认从控制台接收,近支持单参数
+     * @var string
+     */
+    public $argv = '';
+
+    /**
      * 别名,用于全局访问
      * @var string
      */
@@ -155,60 +161,55 @@ class CronManager
     public function parseArgv()
     {
         global $argv;
-        
-        if (count($argv) >= 2) {
+    
+        $command = $this->argv?$this->argv:$argv[1];
 
-            if ($argv[1] == '-d') {
+        switch ($command) {
+            // 守护进程化
+            case '-d':
                 $this->daemon = true;
-            }
-
-            if ($argv[1] == 'log') {
-                if (static::$logFile) {
-                    echo file_get_contents(static::$logFile);
-                }
-                exit;
-            }
-            if ($argv[1] == 'status') {
-                if ($this->_statusFile) {
-                    echo file_get_contents($this->_statusFile);
-                }
-                exit;
-            }
-            if ($argv[1] == 'worker') {
-                if ($this->_statusFile) {
-                    echo file_get_contents($this->_workerStatusFile);
-                }
-                exit;
-            }
-            if ($argv[1] == 'check') {
-                echo ConsoleManager::checkExtensions();
-                exit;
-            }
-            // 平滑终止
-            if ($argv[1] == 'stop') {
+                break;
+            // 停止
+            case 'stop':
                 $pid = intval(@file_get_contents($this->_pidFile));
                 echo "kill $pid\n";
                 posix_kill($pid, $this->_signalSupport['stop']);
-                echo "waiting {$argv[1]} workers\n";
+                echo "waiting {$argv[0]} workers\n";
                 while (file_exists($this->_pidFile)) {
                 }
-                echo "{$argv[1]} OK..\n";
-                exit;
-            }
-
-            if ($argv[1] == 'restart') {
+                echo "{$argv[0]} OK..\n";
+                die;
+                break;
+            // 重启worker
+            case 'restart':
                 $pid = intval(@file_get_contents($this->_pidFile));
                 posix_kill($pid, $this->_signalSupport['restart']);
-                exit;
-            }
-
-            if (in_array($argv[1], array('stop', 'restart'))) {
-                $pid = intval(@file_get_contents($this->_pidFile));
-                posix_kill($pid, $this->_signalSupport[$argv[1]]);
-                exit;
-            }
-
+                die;
+                break;    
+            // 查看任务状态
+            case 'status':
+                if ($this->_statusFile) {
+                    die(file_get_contents($this->_statusFile));
+                }
+                break;
+            // 查看worker状态
+            case 'worker':
+                if ($this->_workerStatusFile) {
+                    die(file_get_contents($this->_workerStatusFile));
+                }
+                break;
+            // 打印log
+            case 'log':
+                if (static::$logFile) {
+                    die(file_get_contents(static::$logFile));
+                }
+                break;
+            // 检测运行环境
+            case 'check':
+                die(ConsoleManager::checkExtensions());
+                break;
         }
+
     }
      /**
      * 创建运行所需的文件
