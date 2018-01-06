@@ -1,8 +1,10 @@
 # 如何在thinkphp5中使用cron-manager
 
+
 ## 自定义命令行
 
-> 对自定义命令行感兴趣的可以去看 [tp5手册](https://www.kancloud.cn/manual/thinkphp5/235129)
+> 对自定义命令行感兴趣的可以去看 [thinkphp5官方手册](https://www.kancloud.cn/manual/thinkphp5/235129)
+
 
 第一步,安装最新的cron-manager
 ```
@@ -11,7 +13,7 @@ composer require godv/cron-manager
 
 第二步, 配置TP5项目的 `application/command.php` 文件
 
-```
+```php
 <?php
 return [
     'app\cron\command\Cron',
@@ -20,7 +22,7 @@ return [
 
 第三步, 创建cron命令文件, 没有就手动创建  `application/cron/Cron.php` 
 
-```
+```php
 <?php
 namespace app\cron\command;
 
