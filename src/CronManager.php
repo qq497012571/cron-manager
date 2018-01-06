@@ -117,11 +117,19 @@ class CronManager
     {
         date_default_timezone_set('Asia/Shanghai');
 
-        $file = 'cronManager.' . substr(md5(basename(__FILE__)),0,16);
+        // 借鉴workerman实现唯一pid实例代码
+        $backtrace        = debug_backtrace();
+        $requireFile = $backtrace[count($backtrace) - 1]['file'];
+        $uniqueFile = str_replace('/', '_', $requireFile);
+
+        $file = 'cron-manager.' . substr(md5($uniqueFile),0,16);
 
         $this->_pidFile = sys_get_temp_dir() . '/' . $file . '.pid';
+
         $this->_statusFile = sys_get_temp_dir() . '/' . $file . '.task_status';
+
         $this->_workerStatusFile = sys_get_temp_dir() . '/' . $file . '.worker_status';
+
         static::$logFile = sys_get_temp_dir() . '/' . $file . '.log';
 
         $this->_master = new Proccess([
@@ -162,7 +170,7 @@ class CronManager
     {
         global $argv;
     
-        $command = $this->argv?$this->argv:$argv[1];
+        $command = $this->argv?$this->argv:@$argv[1];
 
         switch ($command) {
             // 守护进程化
