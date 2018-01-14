@@ -1,14 +1,9 @@
 <?php
+
 require __DIR__ . '/../vendor/autoload.php';
 
-
 $manager = new SuperCronManager\CronManager();
-
-// bash的alias脚本别名,要生效需要用 source .bash_xxxxx 生效!
-$manager->alias = 'cron-manager';
-
-// 设置worker数
-$manager->workerNum = 5;
+$manager->workerNum = 10;
 
 // 设置输出重定向,守护进程模式才生效
 $manager->output = './test.log';

@@ -1,131 +1,119 @@
 <?php
 namespace SuperCronManager;
 
-use SuperCronManager\Proccess;
+use SuperCronManager\Interfaces\WorkerInterface;
+use SuperCronManager\Interfaces\MiddlewareInterface;
 
-class Worker extends Proccess
+class Worker implements WorkerInterface
 {
+	/**
+	 * 休眠时间
+	 */
+	const WORKER_USLEEP = 500000;
 
 	/**
-	 * 缓存任务
-	 * @var array [SuperCronManager\Task]
+	 * 中间件
+	 * @var MiddlewareInterface
 	 */
-	private static $_cacheTasks = [];
+	private $middleware;
 
 	/**
-	 * 间隔
-	 * @var integer
+	 * 任务集合
+	 * @var array
 	 */
-	private $_usleep = 400000;
+	private $tasks = [];
 
 	/**
-	 * worker启动时间
-	 * @var integer
+	 * 信号支持
+	 * @var array
 	 */
-	public $startTime = 0;
-
-	/**
-	 * 执行任务次数
-	 * @var integer
-	 */
-	public $execCount = 0;
-
-	/**
-	 * worker占用内存 byte
-	 * @var integer
-	 */
-	public $memory = 0;
-
-	/**
-	 * 信号
-	 * @var boolean
-	 */
-	private $_signalSupport = [
+	private $signalSupport = [
 		SIGUSR1 => 'stop',
-		SIGUSR2 => 'restart',
+        SIGUSR2 => 'restart'
 	];
 
 	/**
-	 * 构造函数
-	 * @param array $tasks array
-	 * @param array $setting 配置
+	 * 构造方法
+	 * @param array $tasks 任务集合
 	 */
-	public function __construct($tasks = [], $setting = [])
+	public function __construct(array $tasks)
 	{
-		parent::__construct($setting);
-		static::$_cacheTasks = $tasks;
+		$this->tasks = $tasks;
+	}
+
+	/**
+	 * 设置通讯中间件
+	 * @param MiddlewareInterface $middleware
+	 * @return void
+	 */
+	public function setMiddleware(MiddlewareInterface $middleware)
+	{
+		$this->middleware = $middleware;
 	}
 	
 	/**
-	 * 读取队列信号
+	 * 设置进程名称
+	 * @param string $title
 	 * @return void
 	 */
-	public function readSignal()
+	public function setProcTitle($title)
 	{
-		while (($sig = $this->read(CronManager::MSG_SIG_TYPE, false)) != '') {
-			if (isset($this->_signalSupport[$sig])) {
-				call_user_func([$this, $this->_signalSupport[$sig]], $sig);
-			}
+		if ($title && function_exists('cli_set_process_title')) {
+            $this->cli_set_process_title($title . '-worker');
+        }
+	}
+	
+	/**
+	 * 处理进程信号
+	 * @return void
+	 */
+	public function waitSign()
+	{
+		$sig = $this->middleware->pop(CronManager::QUEUE_SIG_VALUE);
+
+		if ($sig !== false) {
+			return call_user_func([$this, $this->signalSupport[$sig]], intval($sig));
 		}
 	}
 
 	/**
-	 * 退出
-	 * @param  integer $exitcode
+	 * 退出worker
+	 * @param  integer $exitcode 退出码
+	 * @return void
 	 */
-	public function stop($exitcode=0)
+	public function stop($exitcode)
 	{
-		exit(intval($exitcode));
+		exit($exitcode);
 	}
 
 	/**
-	 * 重启
-	 * @param  integer $exitcode
+	 * 重启worker
+	 * @return void
 	 */
-	public function restart($exitcode=0)
+	public function restart($exitcode)
 	{
-		exit(intval($exitcode));
+		exit($exitcode);
 	}
 
 	/**
 	 * worker主循环
-	 * @return [type] [description]
+	 * @return void
 	 */
 	public function loop()
 	{
-		$this->startTime = time();
-		
-		while (true) {
-			// wait signal
-			$this->readSignal();
+		while (1) {
 
-			try {
-				// 接收要运行的任务ID
-				$taskId = $this->read(CronManager::MSG_TASKID_TYPE, false);
-				if ($taskId !== false && isset(static::$_cacheTasks[$taskId])) {
-					// 运行任务
-					$task = static::$_cacheTasks[$taskId];
-					$task->exec();
-					$this->execCount++;
-					$this->memory = memory_get_usage();
-					
-					$workerStatus = [
-						'pid' => $this->pid,
-						'execCount' => $this->execCount,
-						'memory' => $this->memory,
-						'startTime' => $this->startTime,
-					];
-					// 记录worker运行状态
-					$this->write(json_encode($workerStatus), CronManager::MSG_WORKER_TYPE);
-				}
-			} catch (Exception $e) {
-				CronManager::log('error', $e->getMessage());
-			}
+			$this->waitSign();
 			
-			usleep($this->_usleep);
+			// 取队列任务ID
+			if (($taskId = $this->middleware->pop(CronManager::QUEUE_TASK_ID)) !== false) {
+				// 运行任务
+				$task = $this->tasks[$taskId];
+				$task->exec();
+			}
+
+			usleep(static::WORKER_USLEEP);
+
 		}
-
-		$this->stop();
 	}
-
 }

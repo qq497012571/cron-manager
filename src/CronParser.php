@@ -140,7 +140,3 @@ class CronParser
 	}
 
 }
-
-// date_default_timezone_set('PRC');
-
-// print_r(CronParser::formatToDate('*/2 * * *', 200));

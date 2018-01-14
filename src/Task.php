@@ -4,6 +4,7 @@ namespace SuperCronManager;
 use SuperCronManager\CronParser;
 /**
  * 定时任务类
+ * @author godv <497012571@qq.com>
  */
 class Task
 {
@@ -95,15 +96,8 @@ class Task
 	 */
 	public function exec()
 	{
-		try {
-			return call_user_func($this->callable, $this->param);
-		} catch (Exception $e) {
-			// 设为异常状态
-			$this->status = 1;
-			CronManager::log('error', $e->getMessage());
-		}
+		return call_user_func($this->callable, $this->param);
 	}
-
 	/**
 	 * 任务周期校验
 	 * @return boolean
@@ -123,6 +117,7 @@ class Task
 		if (time() >= $this->nextTime) {
 			return true;
 		}
+		
 		return false;
 	}
 

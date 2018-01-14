@@ -29,12 +29,25 @@ class ConsoleManager
 	/**
 	 * 向控制台输出任务状态信息
 	 * @param  $tasks
+	 * @param  $expand 扩展头部标题
 	 * @return void
 	 */
-	public static function taskStatusTable($tasks)
+	public static function taskStatusTable($tasks, $expand = [])
 	{
-		$table = new \Console_Table();
-		$table->setHeaders(static::$_taskHeader);
+		$expandTable = new \Console_Table();
+
+		$last = end($expand);
+		foreach ($expand as $key => $value) {
+			$expandTable->addRow(array($key, $value));
+			if ($value != $last) {
+				$expandTable->addSeparator();
+			}
+		}
+		$table  = '';
+		$table .= $expandTable->getTable();
+
+		$taskTable = new \Console_Table();
+		$taskTable->setHeaders(static::$_taskHeader);
 		$status = [
 			'0' => '正常',
 			'1' => '关闭',
@@ -42,7 +55,7 @@ class ConsoleManager
 		];
 		foreach ($tasks as $id => $task) {
 			$attr = $task->getAttributes();
-			$table->addRow(array(
+			$taskTable->addRow(array(
 				$attr['id'], 
 				$attr['name'], 
 				$attr['intvalTag'], 
@@ -52,37 +65,8 @@ class ConsoleManager
 				$attr['nextTime'] ? date('Y-m-d H:i:s',$attr['nextTime']) : '-'
 			));
 		}
-		return $table->getTable();
+		return $table . $taskTable->getTable();
 	}
-
-	/**
-	 * master状态
-	 * @param  object $cronManager
-	 * @return void
-	 */
-	public static function cronManageStatusTable(CronManager $cronManager)
-	{
-		$table = new \Console_Table();
-		$table->addRow(array('pid', getmypid()));
-		$table->addSeparator();
-		$table->addRow(array('output', $cronManager->output));
-		$table->addSeparator();
-
-		if (file_exists($cronManager->bashFile)) {
-			$table->addRow(array('alias', $cronManager->alias));
-			$table->addSeparator();
-			$table->addRow(array('bashFile', $cronManager->bashFile));
-			$table->addSeparator();
-		}
-
-		$table->addRow(array('task_num', count(CronManager::$tasks)));
-		$table->addSeparator();
-		$table->addRow(array('worker_num', $cronManager->workerNum));
-		$table->addSeparator();
-		$table->addRow(array('start_time', $cronManager->startTime));
-		return $table->getTable();
-	}
-
 	/**
 	 * 向控制台输出worker状态信息
 	 * @param  $tasks
