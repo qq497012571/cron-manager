@@ -28,8 +28,9 @@ class Worker implements WorkerInterface
 	 * @var array
 	 */
 	private $signalSupport = [
-		SIGUSR1 => 'stop',
-        SIGUSR2 => 'restart'
+		SIGHUP  => 'stop',
+		SIGTERM => 'stop',
+		SIGUSR1 => 'restart'
 	];
 
 	/**
