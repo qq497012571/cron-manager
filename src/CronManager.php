@@ -196,7 +196,7 @@ class CronManager
         $this->status = static::MASTER_STATUS_RUN;
 
         if ($this->procTitle && function_exists('cli_set_process_title')) {
-            $this->cli_set_process_title($this->procTitle . '-master');
+            cli_set_process_title($this->procTitle . '-master');
         }
     }
 

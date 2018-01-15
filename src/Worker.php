@@ -60,7 +60,7 @@ class Worker implements WorkerInterface
 	public function setProcTitle($title)
 	{
 		if ($title && function_exists('cli_set_process_title')) {
-            $this->cli_set_process_title($title . '-worker');
+            cli_set_process_title($title . '-worker');
         }
 	}
 	
