@@ -1,5 +1,5 @@
 <?php
-namespace SuperCronManager\Interfaces;
+namespace SuperCronManager\Interfaces; 
 
 interface MiddlewareInterface
 {
